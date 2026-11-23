@@ -14,6 +14,7 @@
       --accent-hover: #0284c7;
       --border: #334155;
       --success: #22c55e;
+      --danger: #ef4444;
     }
     * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
     body {
@@ -23,7 +24,7 @@
       padding: 24px;
       line-height: 1.5;
     }
-    .container { max-width: 900px; margin: 0 auto; }
+    .container { max-width: 920px; margin: 0 auto; }
     h1 { margin: 0 0 6px; font-size: 1.6rem; }
     .subtitle { color: var(--muted); margin: 0 0 24px; font-size: 0.95rem; }
     .card {
@@ -34,7 +35,7 @@
       margin-bottom: 20px;
     }
     h2 { margin: 0 0 14px; font-size: 1.15rem; color: var(--accent); }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
     label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; }
     input, select, textarea {
       width: 100%;
@@ -45,8 +46,9 @@
       color: var(--text);
       font-size: 0.95rem;
     }
+    textarea { min-height: 85px; resize: vertical; }
+    .row-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
     button {
-      margin-top: 14px;
       padding: 10px 16px;
       border: none;
       border-radius: 8px;
@@ -56,6 +58,26 @@
       cursor: pointer;
     }
     button:hover { background: var(--accent-hover); color: #fff; }
+    .secondary-btn {
+      background: #334155;
+      color: var(--text);
+    }
+    .secondary-btn:hover { background: #475569; }
+    .danger-btn {
+      background: #7f1d1d;
+      color: #fecaca;
+      padding: 6px 10px;
+      font-size: 0.8rem;
+    }
+    .danger-btn:hover { background: var(--danger); color: #fff; }
+    .copy-btn {
+      margin-top: 10px;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      background: #334155;
+      color: var(--text);
+    }
+    .copy-btn:hover { background: #475569; }
     .status { margin-top: 10px; font-size: 0.9rem; color: var(--success); min-height: 20px; }
     .post-box {
       background: var(--bg);
@@ -66,21 +88,44 @@
       white-space: pre-wrap;
     }
     .account-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
       padding: 10px 12px;
       border: 1px solid var(--border);
       border-radius: 8px;
-      margin-top: 10px;
+      margin-top: 8px;
       background: var(--bg);
     }
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #0c4a6e;
+      color: #bae6fd;
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .screen-preview {
+      margin-top: 12px;
+      max-width: 100%;
+      max-height: 240px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      display: none;
+    }
+    .screen-preview.visible { display: block; }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>X Auto Growth</h1>
-    <p class="subtitle">Interface de configuration, gestion de compte et génération de posts</p>
+    <p class="subtitle">Espace local par compte principal, capture d'écran, comptes suivis & commentaires réactifs</p>
 
     <div class="card">
-      <h2>1. Configuration Cloud & IA</h2>
+      <h2>1. Configuration Cloud, IA & Notifs</h2>
       <div class="grid">
         <div>
           <label for="geminiKey">Clé API Google Gemini</label>
@@ -99,111 +144,495 @@
           <input id="ntfyTopic" type="text" placeholder="mon-canal-ntfy" />
         </div>
       </div>
-      <button id="saveConfigBtn" type="button">Sauvegarder la configuration</button>
+      <div class="row-actions">
+        <button id="saveConfigBtn" type="button">Sauvegarder la configuration</button>
+        <button id="testNtfyBtn" type="button" class="secondary-btn">Tester la notif ntfy.sh</button>
+      </div>
       <div id="configStatus" class="status"></div>
     </div>
 
     <div class="card">
-      <h2>2. Ajouter un compte X & Capture</h2>
+      <h2>2. Ajouter un Compte Principal X (Espace Local Dédié)</h2>
       <div class="grid">
         <div>
-          <label for="xUrl">Lien du compte principal X</label>
-          <input id="xUrl" type="url" placeholder="https://x.com/ton_compte" />
+          <label for="xHandle">Identifiant du compte principal (@handle ou nom)</label>
+          <input id="xHandle" type="text" placeholder="@mon_compte_principal" />
+        </div>
+        <div>
+          <label for="xUrl">Lien du compte principal X (optionnel)</label>
+          <input id="xUrl" type="url" placeholder="https://x.com/mon_compte_principal" />
         </div>
         <div>
           <label for="xNiche">Niche / Thématique</label>
           <input id="xNiche" type="text" placeholder="Finance, IA, Business..." />
         </div>
         <div>
-          <label for="xScreen">Capture d'écran (optionnel)</label>
+          <label for="xScreen">Capture d'écran de ce compte principal</label>
           <input id="xScreen" type="file" accept="image/*" />
         </div>
       </div>
-      <button id="addAccountBtn" type="button">Ajouter le compte & Synchroniser</button>
+      <div class="row-actions">
+        <button id="addAccountBtn" type="button">Créer l'espace du compte principal</button>
+      </div>
       <div id="accountStatus" class="status"></div>
       <div id="accountsList"></div>
     </div>
 
     <div class="card">
-      <h2>3. Générer 5 Posts</h2>
-      <label for="accountSelect">Compte sélectionné</label>
+      <h2>3. Générer 5 Posts & Hashtags Tendances</h2>
+      <label for="accountSelect">Compte principal actif</label>
       <select id="accountSelect"></select>
-      <button id="generatePostsBtn" type="button">Générer 5 Posts maintenant</button>
+      <div class="row-actions">
+        <button id="generatePostsBtn" type="button">Générer 5 Posts + Hashtags maintenant</button>
+      </div>
       <div id="postsStatus" class="status"></div>
       <div id="postsOutput"></div>
+    </div>
+
+    <div class="card">
+      <h2>4. Comptes Suivis & Capture du Compte Principal Actif</h2>
+      <div id="activeAccountBadge" class="badge">Aucun compte principal sélectionné</div>
+
+      <div class="grid">
+        <div>
+          <label for="addFollowedHandleInput">Ajouter un identifiant de compte suivi (@handle)</label>
+          <input id="addFollowedHandleInput" type="text" placeholder="@compte_a_surveiller" />
+        </div>
+        <div>
+          <label for="followedScreenInput">Capture d'écran du compte principal actif</label>
+          <input id="followedScreenInput" type="file" accept="image/*" />
+        </div>
+      </div>
+
+      <div class="row-actions">
+        <button id="addFollowedBtn" type="button">Ajouter à la liste locale de ce compte</button>
+        <button id="syncGithubBtn" type="button" class="secondary-btn">Synchroniser vers GitHub (watched_accounts.json)</button>
+      </div>
+      <div id="followedStatus" class="status"></div>
+
+      <div id="followedList"></div>
+
+      <img id="followedScreenPreview" class="screen-preview" alt="Capture d'écran du compte principal" />
+      <div id="followedScreenInfo" class="subtitle" style="margin-top:8px; margin-bottom:14px;">Aucune capture enregistrée pour ce compte principal.</div>
+
+      <hr style="border:0; border-top:1px solid var(--border); margin: 16px 0;" />
+
+      <div class="grid">
+        <div>
+          <label for="followedAccount">Compte suivi qui vient de poster (@handle)</label>
+          <input id="followedAccount" type="text" placeholder="@compte_suivi" />
+        </div>
+        <div>
+          <label for="replyTone">Style du commentaire</label>
+          <select id="replyTone">
+            <option value="complément malin & naturel avec emojis">Complément malin & naturel + emojis</option>
+            <option value="réaction vive & piquante avec emojis">Réaction vive & piquante + emojis</option>
+            <option value="nuance utile qui fait réfléchir avec emojis">Nuance utile qui fait réfléchir + emojis</option>
+          </select>
+        </div>
+      </div>
+
+      <label for="targetPostText" style="margin-top:12px;">Post publié par ce compte suivi</label>
+      <textarea id="targetPostText" placeholder="Colle ici le texte du post du compte suivi..."></textarea>
+      <div class="row-actions">
+        <button id="generateRepliesBtn" type="button">Générer le commentaire + Envoyer notif</button>
+      </div>
+      <div id="repliesStatus" class="status"></div>
+      <div id="repliesOutput"></div>
     </div>
   </div>
 
   <script>
-    const state = {
-      config: JSON.parse(localStorage.getItem("xag_config") || "{}"),
-      accounts: JSON.parse(localStorage.getItem("xag_accounts") || "[]")
-    };
+    const STORAGE_KEY = "xag_workspace_v2";
 
-    function loadSavedData() {
-      if (state.config.geminiKey) document.getElementById("geminiKey").value = state.config.geminiKey;
-      if (state.config.ghToken) document.getElementById("ghToken").value = state.config.ghToken;
-      if (state.config.ghRepo) document.getElementById("ghRepo").value = state.config.ghRepo;
-      if (state.config.ntfyTopic) document.getElementById("ntfyTopic").value = state.config.ntfyTopic;
-      renderAccounts();
+    function cleanHandle(val) {
+      return (val || "").trim().replace(/^@+/, "").replace(/\s+/g, "");
     }
 
-    function renderAccounts() {
+    const defaultState = {
+      config: { geminiKey: "", ghToken: "", ghRepo: "", ntfyTopic: "" },
+      activeAccountId: null,
+      accounts: []
+      // Chaque compte : { id, handle, url, niche, screenData, screenName, following: [] }
+    };
+
+    function loadState() {
+      try {
+        const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+        if (!raw) return structuredClone(defaultState);
+        return {
+          ...structuredClone(defaultState),
+          ...raw,
+          config: { ...defaultState.config, ...(raw.config || {}) },
+          accounts: Array.isArray(raw.accounts) ? raw.accounts : []
+        };
+      } catch {
+        return structuredClone(defaultState);
+      }
+    }
+
+    const state = loadState();
+    let pendingMainScreen = { data: "", name: "" };
+
+    function persistState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch {
+        // Si une capture d'écran dépasse la limite du localStorage, on sauvegarde sans l'image lourde
+        const lightAccounts = state.accounts.map(a => ({ ...a, screenData: "" }));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...state, accounts: lightAccounts }));
+      }
+    }
+
+    function getActiveAccount() {
+      if (!state.accounts.length) return null;
+      const found = state.accounts.find(a => a.id === state.activeAccountId);
+      if (found) return found;
+      state.activeAccountId = state.accounts[0].id;
+      return state.accounts[0];
+    }
+
+    function getTopic() {
+      return (document.getElementById("ntfyTopic").value || state.config.ntfyTopic || "").trim();
+    }
+
+    async function sendNtfy(title, message, priority = "default") {
+      const topic = getTopic();
+      if (!topic) return { ok: false, reason: "Aucun canal ntfy.sh renseigné." };
+      try {
+        const res = await fetch(`https://ntfy.sh/${encodeURIComponent(topic)}`, {
+          method: "POST",
+          headers: { "Title": title, "Priority": priority },
+          body: message
+        });
+        return { ok: res.ok, reason: res.ok ? "Notification envoyée." : `Erreur HTTP ${res.status}` };
+      } catch {
+        return { ok: false, reason: "Impossible de contacter ntfy.sh." };
+      }
+    }
+
+    function readImageFile(file, callback) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => callback({ data: reader.result, name: file.name });
+      reader.readAsDataURL(file);
+    }
+
+    function renderAll() {
+      const active = getActiveAccount();
+
+      // Badge compte actif
+      const badge = document.getElementById("activeAccountBadge");
+      badge.textContent = active
+        ? `Compte principal actif : @${active.handle} — Niche : ${active.niche}`
+        : "Aucun compte principal sélectionné";
+
+      // Liste des comptes principaux (Section 2)
       const list = document.getElementById("accountsList");
       const select = document.getElementById("accountSelect");
       list.innerHTML = "";
       select.innerHTML = "";
 
-      if (state.accounts.length === 0) {
-        list.innerHTML = `<p class="subtitle" style="margin-top:12px;">Aucun compte enregistré pour le moment.</p>`;
+      if (!state.accounts.length) {
+        list.innerHTML = `<p class="subtitle" style="margin-top:12px;">Aucun compte principal créé pour le moment.</p>`;
         const opt = document.createElement("option");
-        opt.textContent = "Ajoutez d'abord un compte";
+        opt.textContent = "Ajoutez d'abord un compte principal";
         select.appendChild(opt);
-        return;
+      } else {
+        state.accounts.forEach(acc => {
+          const isActive = active && active.id === acc.id;
+          const row = document.createElement("div");
+          row.className = "account-item";
+
+          const info = document.createElement("div");
+          info.innerHTML = `<strong>@${acc.handle}</strong> — Niche : ${acc.niche} (${acc.following.length} compte(s) suivi(s))${isActive ? " · <em>Actif</em>" : ""}`;
+
+          const actions = document.createElement("div");
+          actions.style.display = "flex";
+          actions.style.gap = "8px";
+
+          const selectBtn = document.createElement("button");
+          selectBtn.type = "button";
+          selectBtn.className = isActive ? "" : "secondary-btn";
+          selectBtn.textContent = isActive ? "Actif" : "Ouvrir";
+          selectBtn.addEventListener("click", () => {
+            state.activeAccountId = acc.id;
+            persistState();
+            renderAll();
+          });
+
+          const delBtn = document.createElement("button");
+          delBtn.type = "button";
+          delBtn.className = "danger-btn";
+          delBtn.textContent = "Supprimer";
+          delBtn.addEventListener("click", () => {
+            state.accounts = state.accounts.filter(a => a.id !== acc.id);
+            if (state.activeAccountId === acc.id) {
+              state.activeAccountId = state.accounts[0]?.id || null;
+            }
+            persistState();
+            renderAll();
+          });
+
+          actions.appendChild(selectBtn);
+          actions.appendChild(delBtn);
+          row.appendChild(info);
+          row.appendChild(actions);
+          list.appendChild(row);
+
+          const opt = document.createElement("option");
+          opt.value = acc.id;
+          opt.selected = isActive;
+          opt.textContent = `@${acc.handle} (${acc.niche})`;
+          select.appendChild(opt);
+        });
       }
 
-      state.accounts.forEach((acc, idx) => {
-        const div = document.createElement("div");
-        div.className = "account-item";
-        div.textContent = `${acc.url} — Niche : ${acc.niche}${acc.fileName ? " (Capture : " + acc.fileName + ")" : ""}`;
-        list.appendChild(div);
+      // Comptes suivis locaux du compte actif (Section 4)
+      const followedList = document.getElementById("followedList");
+      followedList.innerHTML = "";
+      if (!active) {
+        followedList.innerHTML = `<p class="subtitle" style="margin-top:10px;">Crée ou sélectionne un compte principal pour gérer ses comptes suivis.</p>`;
+      } else if (!active.following.length) {
+        followedList.innerHTML = `<p class="subtitle" style="margin-top:10px;">Aucun compte suivi enregistré dans l'espace local de @${active.handle}.</p>`;
+      } else {
+        active.following.forEach(h => {
+          const item = document.createElement("div");
+          item.className = "account-item";
 
-        const opt = document.createElement("option");
-        opt.value = idx;
-        opt.textContent = `${acc.url} (${acc.niche})`;
-        select.appendChild(opt);
-      });
+          const span = document.createElement("span");
+          span.textContent = `@${h}`;
+
+          const right = document.createElement("div");
+          right.style.display = "flex";
+          right.style.gap = "8px";
+
+          const fillBtn = document.createElement("button");
+          fillBtn.type = "button";
+          fillBtn.className = "secondary-btn";
+          fillBtn.style.padding = "6px 10px";
+          fillBtn.style.fontSize = "0.8rem";
+          fillBtn.textContent = "Choisir pour commenter";
+          fillBtn.addEventListener("click", () => {
+            document.getElementById("followedAccount").value = `@${h}`;
+          });
+
+          const removeBtn = document.createElement("button");
+          removeBtn.type = "button";
+          removeBtn.className = "danger-btn";
+          removeBtn.textContent = "Retirer";
+          removeBtn.addEventListener("click", () => {
+            active.following = active.following.filter(x => x !== h);
+            persistState();
+            renderAll();
+          });
+
+          right.appendChild(fillBtn);
+          right.appendChild(removeBtn);
+          item.appendChild(span);
+          item.appendChild(right);
+          followedList.appendChild(item);
+        });
+      }
+
+      // Aperçu capture d'écran du compte principal actif
+      const img = document.getElementById("followedScreenPreview");
+      const info = document.getElementById("followedScreenInfo");
+      if (active && active.screenData) {
+        img.src = active.screenData;
+        img.classList.add("visible");
+        info.textContent = `Capture de @${active.handle} : ${active.screenName || "image enregistrée"}`;
+      } else {
+        img.src = "";
+        img.classList.remove("visible");
+        info.textContent = active
+          ? `Aucune capture enregistrée pour @${active.handle}.`
+          : "Aucune capture enregistrée pour ce compte principal.";
+      }
     }
 
-    document.getElementById("saveConfigBtn").addEventListener("click", () => {
+    function addCopyButton(container, textToCopy) {
+      const copyBtn = document.createElement("button");
+      copyBtn.type = "button";
+      copyBtn.className = "copy-btn";
+      copyBtn.textContent = "Copier";
+      copyBtn.addEventListener("click", () => {
+        navigator.clipboard.writeText(textToCopy);
+        copyBtn.textContent = "Copié !";
+        setTimeout(() => { copyBtn.textContent = "Copier"; }, 1500);
+      });
+      container.appendChild(copyBtn);
+    }
+
+    function loadSavedConfig() {
+      if (state.config.geminiKey) document.getElementById("geminiKey").value = state.config.geminiKey;
+      if (state.config.ghToken) document.getElementById("ghToken").value = state.config.ghToken;
+      if (state.config.ghRepo) document.getElementById("ghRepo").value = state.config.ghRepo;
+      if (state.config.ntfyTopic) document.getElementById("ntfyTopic").value = state.config.ntfyTopic;
+      renderAll();
+    }
+
+    document.getElementById("xScreen").addEventListener("change", (e) => {
+      if (e.target.files && e.target.files[0]) {
+        readImageFile(e.target.files[0], imgObj => {
+          pendingMainScreen = imgObj;
+        });
+      }
+    });
+
+    document.getElementById("followedScreenInput").addEventListener("change", (e) => {
+      const active = getActiveAccount();
+      if (!active) {
+        document.getElementById("followedStatus").textContent = "Sélectionne ou crée d'abord un compte principal.";
+        return;
+      }
+      if (e.target.files && e.target.files[0]) {
+        readImageFile(e.target.files[0], imgObj => {
+          active.screenData = imgObj.data;
+          active.screenName = imgObj.name;
+          persistState();
+          renderAll();
+          document.getElementById("followedStatus").textContent = `Capture enregistrée pour @${active.handle}.`;
+        });
+      }
+    });
+
+    document.getElementById("accountSelect").addEventListener("change", (e) => {
+      state.activeAccountId = e.target.value;
+      persistState();
+      renderAll();
+    });
+
+    document.getElementById("saveConfigBtn").addEventListener("click", async () => {
       state.config = {
         geminiKey: document.getElementById("geminiKey").value.trim(),
         ghToken: document.getElementById("ghToken").value.trim(),
         ghRepo: document.getElementById("ghRepo").value.trim(),
         ntfyTopic: document.getElementById("ntfyTopic").value.trim()
       };
-      localStorage.setItem("xag_config", JSON.stringify(state.config));
-      document.getElementById("configStatus").textContent = "Configuration enregistrée dans le navigateur.";
+      persistState();
+      const notif = await sendNtfy("X Auto Growth", "Configuration enregistrée avec succès.");
+      document.getElementById("configStatus").textContent = notif.ok
+        ? "Configuration enregistrée et notification envoyée."
+        : `Configuration enregistrée (${notif.reason})`;
     });
 
-    document.getElementById("addAccountBtn").addEventListener("click", () => {
+    document.getElementById("testNtfyBtn").addEventListener("click", async () => {
+      const status = document.getElementById("configStatus");
+      status.textContent = "Envoi de la notification test...";
+      const notif = await sendNtfy("Test X Auto Growth", "Les notifications ntfy.sh fonctionnent bien !");
+      status.textContent = notif.ok ? "Notification test envoyée sur ton canal ntfy.sh." : notif.reason;
+    });
+
+    document.getElementById("addAccountBtn").addEventListener("click", async () => {
+      const handle = cleanHandle(document.getElementById("xHandle").value);
       const url = document.getElementById("xUrl").value.trim();
       const niche = document.getElementById("xNiche").value.trim();
-      const fileInput = document.getElementById("xScreen");
-      const fileName = fileInput.files && fileInput.files[0] ? fileInput.files[0].name : "";
+      const status = document.getElementById("accountStatus");
 
-      if (!url || !niche) {
-        document.getElementById("accountStatus").textContent = "Renseigne au moins le lien du compte et la niche.";
+      if (!handle || !niche) {
+        status.textContent = "Renseigne au moins l'identifiant (@handle) du compte principal et sa niche.";
         return;
       }
 
-      state.accounts.push({ url, niche, fileName });
-      localStorage.setItem("xag_accounts", JSON.stringify(state.accounts));
-      renderAccounts();
+      const newAcc = {
+        id: String(Date.now()),
+        handle,
+        url: url || `https://x.com/${handle}`,
+        niche,
+        screenData: pendingMainScreen.data || "",
+        screenName: pendingMainScreen.name || "",
+        following: []
+      };
+
+      state.accounts.push(newAcc);
+      state.activeAccountId = newAcc.id;
+      pendingMainScreen = { data: "", name: "" };
+      document.getElementById("xHandle").value = "";
       document.getElementById("xUrl").value = "";
       document.getElementById("xNiche").value = "";
-      fileInput.value = "";
-      document.getElementById("accountStatus").textContent = "Compte ajouté.";
+      document.getElementById("xScreen").value = "";
+
+      persistState();
+      renderAll();
+
+      const notif = await sendNtfy("Nouveau compte principal", `@${handle} — Niche : ${niche}`);
+      status.textContent = notif.ok
+        ? `Espace créé pour @${handle} et notification envoyée.`
+        : `Espace créé pour @${handle}.`;
+    });
+
+    document.getElementById("addFollowedBtn").addEventListener("click", () => {
+      const active = getActiveAccount();
+      const status = document.getElementById("followedStatus");
+      if (!active) {
+        status.textContent = "Ajoute ou sélectionne d'abord un compte principal.";
+        return;
+      }
+
+      const targetHandle = cleanHandle(document.getElementById("addFollowedHandleInput").value);
+      if (!targetHandle) {
+        status.textContent = "Entre un identifiant de compte suivi (ex. @compte_suivi).";
+        return;
+      }
+
+      if (!active.following.includes(targetHandle)) {
+        active.following.push(targetHandle);
+        persistState();
+        renderAll();
+      }
+      document.getElementById("addFollowedHandleInput").value = "";
+      status.textContent = `@${targetHandle} ajouté à la liste locale de @${active.handle}.`;
+    });
+
+    document.getElementById("syncGithubBtn").addEventListener("click", async () => {
+      const active = getActiveAccount();
+      const status = document.getElementById("followedStatus");
+      const token = (document.getElementById("ghToken").value || state.config.ghToken || "").trim();
+      const repo = (document.getElementById("ghRepo").value || state.config.ghRepo || "").trim();
+
+      if (!active) {
+        status.textContent = "Sélectionne d'abord un compte principal.";
+        return;
+      }
+      if (!token || !repo) {
+        status.textContent = "Renseigne le Token GitHub et le Dépôt GitHub dans la section 1.";
+        return;
+      }
+
+      status.textContent = "Synchronisation de watched_accounts.json sur GitHub...";
+      try {
+        const apiUrl = `https://api.github.com/repos/${repo}/contents/watched_accounts.json`;
+        const getRes = await fetch(apiUrl, {
+          headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json" }
+        });
+        let sha = undefined;
+        if (getRes.ok) {
+          const existing = await getRes.json();
+          sha = existing.sha;
+        }
+
+        const contentBase64 = btoa(unescape(encodeURIComponent(JSON.stringify(active.following, null, 2))));
+        const putRes = await fetch(apiUrl, {
+          method: "PUT",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/vnd.github+json",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            message: `chore: sync watched accounts for @${active.handle}`,
+            content: contentBase64,
+            ...(sha ? { sha } : {})
+          })
+        });
+
+        status.textContent = putRes.ok
+          ? `Synchronisé vers watched_accounts.json (${active.following.length} compte(s) pour @${active.handle}).`
+          : `Erreur GitHub (${putRes.status}). Vérifie les droits Contents du Token.`;
+      } catch {
+        status.textContent = "Erreur réseau lors de la synchronisation GitHub.";
+      }
     });
 
     document.getElementById("generatePostsBtn").addEventListener("click", async () => {
@@ -211,46 +640,112 @@
       const status = document.getElementById("postsStatus");
       out.innerHTML = "";
 
-      if (state.accounts.length === 0) {
-        status.textContent = "Ajoute d'abord un compte.";
+      const acc = getActiveAccount();
+      if (!acc) {
+        status.textContent = "Ajoute d'abord un compte principal.";
         return;
       }
 
-      const acc = state.accounts[document.getElementById("accountSelect").value || 0];
-      const apiKey = state.config.geminiKey || document.getElementById("geminiKey").value.trim();
-
+      const apiKey = (document.getElementById("geminiKey").value || state.config.geminiKey || "").trim();
       if (!apiKey) {
         status.textContent = "Ajoute ta clé API Google Gemini dans la section 1.";
         return;
       }
 
-      status.textContent = "Génération des 5 posts en cours...";
-
+      status.textContent = "Génération des 5 posts et hashtags tendances en cours...";
       try {
-        const prompt = `Génère exactement 5 posts courts et percutants pour X (Twitter) sur la niche "${acc.niche}" pour le compte ${acc.url}. Numérote-les de 1 à 5, sans introduction ni conclusion.`;
+        const prompt = `Génère exactement 5 posts courts, percutants et engageants pour X (Twitter) sur la niche "${acc.niche}" pour le compte @${acc.handle} (${acc.url}).
+Chaque post doit :
+- Avoir un angle différent (hook fort, conseil concret, question d'engagement, contre-intuition, retour d'expérience).
+- Rester court (idéalement moins de 260 caractères).
+- Se terminer par 3 à 5 hashtags tendances pertinents pour la niche "${acc.niche}".
+Numérote-les de 1 à 5, sans introduction ni conclusion.`;
+
         const res = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }] }]
-            })
+            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
           }
         );
         const data = await res.json();
         const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Aucune réponse reçue.";
+
         const box = document.createElement("div");
         box.className = "post-box";
         box.textContent = text;
         out.appendChild(box);
-        status.textContent = "5 posts générés.";
-      } catch (err) {
+        addCopyButton(out, text);
+
+        status.textContent = "5 posts + hashtags tendances générés.";
+        await sendNtfy("5 Posts générés", `@${acc.handle} (${acc.niche}) — Prêts dans le dashboard.`);
+      } catch {
         status.textContent = "Erreur lors de l'appel à l'API Gemini.";
+        await sendNtfy("Erreur Génération", "Échec de la génération des 5 posts via Gemini.", "high");
       }
     });
 
-    loadSavedData();
+    document.getElementById("generateRepliesBtn").addEventListener("click", async () => {
+      const out = document.getElementById("repliesOutput");
+      const status = document.getElementById("repliesStatus");
+      out.innerHTML = "";
+
+      const active = getActiveAccount();
+      const followedAcc = cleanHandle(document.getElementById("followedAccount").value) || "un compte suivi";
+      const targetText = document.getElementById("targetPostText").value.trim();
+      const tone = document.getElementById("replyTone").value;
+      const apiKey = (document.getElementById("geminiKey").value || state.config.geminiKey || "").trim();
+      const niche = active ? active.niche : "général";
+
+      if (!targetText) {
+        status.textContent = "Colle d'abord le post publié par le compte suivi.";
+        return;
+      }
+      if (!apiKey) {
+        status.textContent = "Ajoute ta clé API Google Gemini dans la section 1.";
+        return;
+      }
+
+      status.textContent = "Génération du commentaire + envoi de la notification...";
+      try {
+        const prompt = `Tu es un expert en croissance organique sur X (Twitter).
+Un compte suivi (@${followedAcc}) vient de publier ce post :
+"${targetText}"
+
+Mon compte principal est dans la niche "${niche}".
+Génère un commentaire court (moins de 180 caractères), naturel et percutant, en correspondance directe avec le sujet exact de ce post, avec un style "${tone}" et des emojis pertinents.
+Règles strictes :
+- Ne mentionne JAMAIS "mon profil", "fais un tour sur mon profil", "regarde mon compte" ou tout appel à visiter le profil.
+- Donne uniquement le commentaire prêt à copier-coller, sans introduction ni explication.`;
+
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+          }
+        );
+        const data = await res.json();
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Aucune réponse reçue.";
+
+        const box = document.createElement("div");
+        box.className = "post-box";
+        box.textContent = text;
+        out.appendChild(box);
+        addCopyButton(out, text);
+
+        const notif = await sendNtfy(`Nouveau post de @${followedAcc}`, `Commentaire prêt :\n${text}`);
+        status.textContent = notif.ok
+          ? "Commentaire généré et notification envoyée sur ton canal."
+          : `Commentaire généré (${notif.reason})`;
+      } catch {
+        status.textContent = "Erreur lors de la génération du commentaire.";
+      }
+    });
+
+    loadSavedConfig();
   </script>
 </body>
 </html>
