@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>X Viral Growth — Niche & Tendances</title>
+  <style>
+    :root { --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --text: #f8fafc; --muted: #94a3b8; }
+    body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { color: var(--accent); margin-bottom: 5px; }
+    .subtitle { color: var(--muted); margin-bottom: 25px; font-size: 0.95rem; }
+    .card { background: var(--card); padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #334155; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    @media (max-width: 650px) { .grid { grid-template-columns: 1fr; } }
+    label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; }
+    input, select, textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: white; box-sizing: border-box; margin-bottom: 12px; }
+    button { background: var(--accent); color: #0f172a; font-weight: bold; border: none; padding: 12px 18px; border-radius: 8px; cursor: pointer; width: 100%; transition: 0.2s; }
+    button:hover { opacity: 0.9; }
+    .post-box { background: #0f172a; padding: 15px; border-radius: 8px; border-left: 4px solid var(--accent); margin-bottom: 12px; }
+    .copy-btn { width: auto; padding: 6px 12px; font-size: 0.8rem; margin-top: 10px; }
+    .badge { display: inline-block; background: #0284c7; color: white; padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; margin-right: 5px; }
+    .account-item { display: flex; justify-content: space-between; align-items: center; background: #0f172a; padding: 12px; border-radius: 8px; margin-bottom: 8px; }
+    .del-btn { background: #ef4444; color: white; width: auto; padding: 6px 10px; font-size: 0.8rem; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>⚡ X Growth Engine — Niche & Tendances</h1>
+  <p class="subtitle">Génération de 5 posts viraux tendance + Surveillance IA 24h/24 (PC éteint)</p>
+
+  <details class="card">
+    <summary style="cursor:pointer; font-weight:bold; color:#38bdf8;">⚙️ Configuration Cloud & IA (À remplir 1 seule fois)</summary>
+    <div style="margin-top:15px;" class="grid">
+      <div>
+        <label>Clé API Google Gemini (Gratuite)</label>
+        <input type="password" id="geminiKey" placeholder="AIzaSy...">
+      </div>
+      <div>
+        <label>Token GitHub (repo permission)</label>
+        <input type="password" id="ghToken" placeholder="ghp_...">
+      </div>
+      <div>
+        <label>Dépôt GitHub (ex: pseudo/x-auto-growth)</label>
+        <input type="text" id="ghRepo" placeholder="votre-pseudo/x-auto-growth">
+      </div>
+      <div>
+        <label>Canal ntfy.sh (Notifications)</label>
+        <input type="text" id="ntfyTopic" placeholder="mon_canal_x_2026">
+      </div>
+    </div>
+    <button onclick="saveSettings()">💾 Sauvegarder la configuration</button>
+  </details>
+
+  <div class="card">
+    <h3>➕ Ajouter un compte principal & sa niche</h3>
+    <div class="grid">
+      <div>
+        <label>Lien de votre compte principal X</label>
+        <input type="url" id="accountUrl" placeholder="https://x.com/votrecompte">
+      </div>
+      <div>
+        <label>Niche exacte & Angle tendance</label>
+        <input type="text" id="accountNiche" placeholder="Ex: Finance perso, IA & Business, Lifestyle, Tech...">
+      </div>
+    </div>
+    <label>Capture d'écran d'abonnements / comptes leaders de la niche (Optionnel — lu par l'IA)</label>
+    <input type="file" id="screenshotInput" accept="image/*">
+    <button onclick="addAccount()">🚀 Ajouter le compte & Synchroniser le robot 24h/24</button>
+    <p id="statusMsg" style="color:#38bdf8; font-size:0.9rem; margin-top:10px;"></p>
+
+    <div id="accountsList" style="margin-top:20px;"></div>
+  </div>
+
+  <div class="card">
+    <h3>🔥 Vos 5 Posts Viraux Tendance (Emojis + Hashtags optimisés)</h3>
+    <label>Sélectionner le compte / la niche à booster :</label>
+    <select id="selectedAccountForPosts"></select>
+    <button onclick="generate5ViralPosts()">✨ Générer 5 Posts Ultra-Tendances maintenant</button>
+    <div id="postsContainer" style="margin-top:20px;"></div>
+  </div>
+</div>
+
+<script>
+  let accounts = JSON.parse(localStorage.getItem('x_accounts') || '[]');
+
+  window.onload = () => {
+    ['geminiKey', 'ghToken', 'ghRepo', 'ntfyTopic'].forEach(id => {
+      if (localStorage.getItem(id)) document.getElementById(id).value = localStorage.getItem(id);
+    });
+    renderAccounts();
+  };
+
+  function saveSettings() {
+    ['geminiKey', 'ghToken', 'ghRepo', 'ntfyTopic'].forEach(id => {
+      localStorage.setItem(id, document.getElementById(id).value.trim());
+    });
+    alert('Configuration sauvegardée dans votre navigateur !');
+  }
+
+  async function extractHandlesFromImage(file, apiKey) {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = reader.result.split(',')[1];
+        try {
+          const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{
+                parts: [
+                  { text: "Extrais uniquement tous les identifiants Twitter/X commençant par @ visibles sur cette capture d'écran. Réponds uniquement par une liste séparée par des virgules, sans aucun autre texte." },
+                  { inline_data: { mime_type: file.type, data: base64 } }
+                ]
+              }]
+            })
+          });
+          const data = await res.json();
+          const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          const handles = text.match(/@[a-zA-Z0-9_]+/g) || [];
+          resolve([...new Set(handles)]);
+        } catch (e) { resolve([]); }
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function addAccount() {
+    const url = document.getElementById('accountUrl').value.trim();
+    const niche = document.getElementById('accountNiche').value.trim();
+    const file = document.getElementById('screenshotInput').files[0];
+    const geminiKey = localStorage.getItem('geminiKey');
+    const status = document.getElementById('statusMsg');
+
+    if (!url || !niche) return alert('Veuillez entrer le lien du compte et sa niche.');
+    status.innerText = '⏳ Analyse IA et synchronisation en cours...';
+
+    let extractedHandles = [];
+    if (file && geminiKey) {
+      extractedHandles = await extractHandlesFromImage(file, geminiKey);
+    }
+
+    const handleMatch = url.match(/(?:x\.com|twitter\.com)\/([a-zA-Z0-9_]+)/);
+    const mainHandle = handleMatch ? '@' + handleMatch[1] : url;
+
+    accounts.push({ mainHandle, url, niche, targets: extractedHandles });
+    localStorage.setItem('x_accounts', JSON.stringify(accounts));
+    renderAccounts();
+    await syncToGitHub();
+
+    document.getElementById('accountUrl').value = '';
+    document.getElementById('accountNiche').value = '';
+    document.getElementById('screenshotInput').value = '';
+    status.innerText = `✅ Compte ${mainHandle} ajouté (${extractedHandles.length} comptes cibles extraits) et synchronisé avec le robot 24h/24 !`;
+  }
+
+  function removeAccount(index) {
+    accounts.splice(index, 1);
+    localStorage.setItem('x_accounts', JSON.stringify(accounts));
+    renderAccounts();
+    syncToGitHub();
+  }
+
+  function renderAccounts() {
+    const list = document.getElementById('accountsList');
+    const select = document.getElementById('selectedAccountForPosts');
+    list.innerHTML = '';
+    select.innerHTML = '';
+
+    accounts.forEach((acc, i) => {
+      list.innerHTML += `
+        <div class="account-item">
+          <div>
+            <strong>${acc.mainHandle}</strong> <span class="badge">${acc.niche}</span><br>
+            <small style="color:#94a3b8;">Comptes cibles suivis : ${acc.targets.length > 0 ? acc.targets.join(', ') : 'Surveillance automatique des tendances de la niche'}</small>
+          </div>
+          <button class="del-btn" onclick="removeAccount(${i})">Supprimer</button>
+        </div>`;
+      select.innerHTML += `<option value="${i}">${acc.mainHandle} — Niche : ${acc.niche}</option>`;
+    });
+  }
+
+  async function syncToGitHub() {
+    const token = localStorage.getItem('ghToken');
+    const repo = localStorage.getItem('ghRepo');
+    if (!token || !repo) return;
+
+    const apiUrl = `https://api.github.com/repos/${repo}/contents/config.json`;
+    let sha = '';
+    try {
+      const getRes = await fetch(apiUrl, { headers: { Authorization: `token ${token}` } });
+      if (getRes.ok) { const d = await getRes.json(); sha = d.sha; }
+    } catch (e) {}
+
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify({ accounts }, null, 2))));
+    await fetch(apiUrl, {
+      method: 'PUT',
+      headers: { Authorization: `token ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'Mise à jour comptes et niches', content, sha: sha || undefined })
+    });
+  }
+
+  async function generate5ViralPosts() {
+    const idx = document.getElementById('selectedAccountForPosts').value;
+    const geminiKey = localStorage.getItem('geminiKey');
+    if (idx === '' || !geminiKey) return alert('Ajoutez un compte et vérifiez votre clé API Gemini.');
+
+    const acc = accounts[idx];
+    const container = document.getElementById('postsContainer');
+    container.innerHTML = '<p style="color:#38bdf8;">⏳ Génération de 5 posts ultra-viraux adaptés aux tendances actuelles...</p>';
+
+    const prompt = `Tu es un stratège viral sur X (Twitter) en français.
+Génère exactement 5 posts prêts à publier en français naturel et fluide pour le compte ${acc.mainHandle} dans la niche : "${acc.niche}".
+Règles strictes pour chaque post :
+1. Utilise des sujets très tendances et actuels en français dans cette niche.
+2. Commence par un Hook (accroche) irrésistible en français qui stoppe le scroll (curiosité, chiffre choc, vérité contre-intuitive ou conseil immédiat).
+3. Intègre des emojis tendance bien placés pour rendre le post visuel et dynamique.
+4. Termine par 2 à 3 hashtags tendance et pertinents en français pour maximiser la portée algorithmique.
+5. Format de réponse : sépare chaque post par "---POST---" sans numérotation ni texte d'introduction.`;
+
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    const data = await res.json();
+    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const posts = rawText.split('---POST---').map(p => p.trim()).filter(Boolean);
+
+    container.innerHTML = '';
+    posts.forEach((post, i) => {
+      container.innerHTML += `
+        <div class="post-box">
+          <div style="white-space: pre-wrap; line-height: 1.5;">${post}</div>
+          <button class="copy-btn" onclick="navigator.clipboard.writeText(this.parentElement.querySelector('div').innerText); this.innerText='✅ Copié !'">📋 Copier le post #${i+1}</button>
+        </div>`;
+    });
+  }
+</script>
+</body>
+</html>
