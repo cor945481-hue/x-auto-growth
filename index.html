@@ -1,1 +1,256 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>X Auto Growth — Dashboard</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-hover: #0284c7;
+      --border: #334155;
+      --success: #22c55e;
+    }
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      padding: 24px;
+      line-height: 1.5;
+    }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { margin: 0 0 6px; font-size: 1.6rem; }
+    .subtitle { color: var(--muted); margin: 0 0 24px; font-size: 0.95rem; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    h2 { margin: 0 0 14px; font-size: 1.15rem; color: var(--accent); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+    label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 6px; }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+    button {
+      margin-top: 14px;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #082f49;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button:hover { background: var(--accent-hover); color: #fff; }
+    .status { margin-top: 10px; font-size: 0.9rem; color: var(--success); min-height: 20px; }
+    .post-box {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 10px;
+      white-space: pre-wrap;
+    }
+    .account-item {
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-top: 10px;
+      background: var(--bg);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>X Auto Growth</h1>
+    <p class="subtitle">Interface de configuration, gestion de compte et génération de posts</p>
 
+    <div class="card">
+      <h2>1. Configuration Cloud & IA</h2>
+      <div class="grid">
+        <div>
+          <label for="geminiKey">Clé API Google Gemini</label>
+          <input id="geminiKey" type="password" placeholder="AIza..." />
+        </div>
+        <div>
+          <label for="ghToken">Token GitHub (PAT)</label>
+          <input id="ghToken" type="password" placeholder="ghp_..." />
+        </div>
+        <div>
+          <label for="ghRepo">Dépôt GitHub</label>
+          <input id="ghRepo" type="text" placeholder="cor945481-hue/x-auto-growth" />
+        </div>
+        <div>
+          <label for="ntfyTopic">Canal ntfy.sh</label>
+          <input id="ntfyTopic" type="text" placeholder="mon-canal-ntfy" />
+        </div>
+      </div>
+      <button id="saveConfigBtn" type="button">Sauvegarder la configuration</button>
+      <div id="configStatus" class="status"></div>
+    </div>
+
+    <div class="card">
+      <h2>2. Ajouter un compte X & Capture</h2>
+      <div class="grid">
+        <div>
+          <label for="xUrl">Lien du compte principal X</label>
+          <input id="xUrl" type="url" placeholder="https://x.com/ton_compte" />
+        </div>
+        <div>
+          <label for="xNiche">Niche / Thématique</label>
+          <input id="xNiche" type="text" placeholder="Finance, IA, Business..." />
+        </div>
+        <div>
+          <label for="xScreen">Capture d'écran (optionnel)</label>
+          <input id="xScreen" type="file" accept="image/*" />
+        </div>
+      </div>
+      <button id="addAccountBtn" type="button">Ajouter le compte & Synchroniser</button>
+      <div id="accountStatus" class="status"></div>
+      <div id="accountsList"></div>
+    </div>
+
+    <div class="card">
+      <h2>3. Générer 5 Posts</h2>
+      <label for="accountSelect">Compte sélectionné</label>
+      <select id="accountSelect"></select>
+      <button id="generatePostsBtn" type="button">Générer 5 Posts maintenant</button>
+      <div id="postsStatus" class="status"></div>
+      <div id="postsOutput"></div>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      config: JSON.parse(localStorage.getItem("xag_config") || "{}"),
+      accounts: JSON.parse(localStorage.getItem("xag_accounts") || "[]")
+    };
+
+    function loadSavedData() {
+      if (state.config.geminiKey) document.getElementById("geminiKey").value = state.config.geminiKey;
+      if (state.config.ghToken) document.getElementById("ghToken").value = state.config.ghToken;
+      if (state.config.ghRepo) document.getElementById("ghRepo").value = state.config.ghRepo;
+      if (state.config.ntfyTopic) document.getElementById("ntfyTopic").value = state.config.ntfyTopic;
+      renderAccounts();
+    }
+
+    function renderAccounts() {
+      const list = document.getElementById("accountsList");
+      const select = document.getElementById("accountSelect");
+      list.innerHTML = "";
+      select.innerHTML = "";
+
+      if (state.accounts.length === 0) {
+        list.innerHTML = `<p class="subtitle" style="margin-top:12px;">Aucun compte enregistré pour le moment.</p>`;
+        const opt = document.createElement("option");
+        opt.textContent = "Ajoutez d'abord un compte";
+        select.appendChild(opt);
+        return;
+      }
+
+      state.accounts.forEach((acc, idx) => {
+        const div = document.createElement("div");
+        div.className = "account-item";
+        div.textContent = `${acc.url} — Niche : ${acc.niche}${acc.fileName ? " (Capture : " + acc.fileName + ")" : ""}`;
+        list.appendChild(div);
+
+        const opt = document.createElement("option");
+        opt.value = idx;
+        opt.textContent = `${acc.url} (${acc.niche})`;
+        select.appendChild(opt);
+      });
+    }
+
+    document.getElementById("saveConfigBtn").addEventListener("click", () => {
+      state.config = {
+        geminiKey: document.getElementById("geminiKey").value.trim(),
+        ghToken: document.getElementById("ghToken").value.trim(),
+        ghRepo: document.getElementById("ghRepo").value.trim(),
+        ntfyTopic: document.getElementById("ntfyTopic").value.trim()
+      };
+      localStorage.setItem("xag_config", JSON.stringify(state.config));
+      document.getElementById("configStatus").textContent = "Configuration enregistrée dans le navigateur.";
+    });
+
+    document.getElementById("addAccountBtn").addEventListener("click", () => {
+      const url = document.getElementById("xUrl").value.trim();
+      const niche = document.getElementById("xNiche").value.trim();
+      const fileInput = document.getElementById("xScreen");
+      const fileName = fileInput.files && fileInput.files[0] ? fileInput.files[0].name : "";
+
+      if (!url || !niche) {
+        document.getElementById("accountStatus").textContent = "Renseigne au moins le lien du compte et la niche.";
+        return;
+      }
+
+      state.accounts.push({ url, niche, fileName });
+      localStorage.setItem("xag_accounts", JSON.stringify(state.accounts));
+      renderAccounts();
+      document.getElementById("xUrl").value = "";
+      document.getElementById("xNiche").value = "";
+      fileInput.value = "";
+      document.getElementById("accountStatus").textContent = "Compte ajouté.";
+    });
+
+    document.getElementById("generatePostsBtn").addEventListener("click", async () => {
+      const out = document.getElementById("postsOutput");
+      const status = document.getElementById("postsStatus");
+      out.innerHTML = "";
+
+      if (state.accounts.length === 0) {
+        status.textContent = "Ajoute d'abord un compte.";
+        return;
+      }
+
+      const acc = state.accounts[document.getElementById("accountSelect").value || 0];
+      const apiKey = state.config.geminiKey || document.getElementById("geminiKey").value.trim();
+
+      if (!apiKey) {
+        status.textContent = "Ajoute ta clé API Google Gemini dans la section 1.";
+        return;
+      }
+
+      status.textContent = "Génération des 5 posts en cours...";
+
+      try {
+        const prompt = `Génère exactement 5 posts courts et percutants pour X (Twitter) sur la niche "${acc.niche}" pour le compte ${acc.url}. Numérote-les de 1 à 5, sans introduction ni conclusion.`;
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }]
+            })
+          }
+        );
+        const data = await res.json();
+        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Aucune réponse reçue.";
+        const box = document.createElement("div");
+        box.className = "post-box";
+        box.textContent = text;
+        out.appendChild(box);
+        status.textContent = "5 posts générés.";
+      } catch (err) {
+        status.textContent = "Erreur lors de l'appel à l'API Gemini.";
+      }
+    });
+
+    loadSavedData();
+  </script>
+</body>
+</html>
